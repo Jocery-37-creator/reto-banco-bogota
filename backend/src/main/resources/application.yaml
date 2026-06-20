@@ -1,0 +1,22 @@
+spring:
+  # PostgreSQL
+  datasource:
+    url: jdbc:postgresql://localhost:5432/practicantes_db
+    username: postgres
+    password: Bbogota
+    driver-class-name: org.postgresql.Driver
+
+  # Hibernate / JPA
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Control de archivos (PDFs)
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
