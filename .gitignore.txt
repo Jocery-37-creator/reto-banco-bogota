@@ -1,0 +1,12 @@
+# Carpetas de dependencias
+node_modules
+target
+
+# Archivos de IDEs
+.idea
+.vscode
+.iml
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
