@@ -164,7 +164,7 @@ export function Footer() {
 
         {/* Bottom Footer */}
         <div className="flex flex-col md:flex-row justify-between items-center text-xs text-gray-300">
-          <p>&copy; 2024 Banco de Bogotá. Todos los derechos reservados.</p>
+          <p>&copy; 2026 Banco de Bogotá. Todos los derechos reservados.</p>
           <div className="flex gap-6 mt-4 md:mt-0">
             <a href="#" className="hover:text-white transition">
               Privacidad
