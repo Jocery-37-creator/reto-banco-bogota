@@ -6,7 +6,6 @@ import com.bancobogota.backend.repository.PracticanteRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,9 +20,12 @@ public class PracticanteService {
     private final String subida_dir = "uploads/"; // Directorio de subida de HV
 
     private final PracticanteRepository practicanteRepository;
+    private final EmailService emailService; // <-- 1. Declaramos el servicio de correo
 
-    public PracticanteService(PracticanteRepository repository) {
-        this.practicanteRepository = repository; // DI
+    // 2. Modificamos el constructor para aplicar la Inyección de Dependencias (DI)
+    public PracticanteService(PracticanteRepository repository, EmailService emailService) {
+        this.practicanteRepository = repository;
+        this.emailService = emailService;
     }
 
     public Practicante registrarPracticante(PracticanteDTO dto) throws IOException {
@@ -46,8 +48,17 @@ public class PracticanteService {
         nuevoPracticante.setSemestreActual(dto.getSemestreActual());
         nuevoPracticante.setRutaHojaVida(nombreArchivoUnico);
 
-        return practicanteRepository.save(nuevoPracticante);
+        // Guardamos el registro en la base de datos
+        Practicante practicanteGuardado = practicanteRepository.save(nuevoPracticante);
 
+        // 3. ¡Disparamos el correo electrónico de confirmación!
+        log.info("Iniciando envío de correo de confirmación para: {}", practicanteGuardado.getCorreoElectronico());
+        emailService.enviarCorreoConfirmacion(
+                practicanteGuardado.getCorreoElectronico(),
+                practicanteGuardado.getNombreCompleto()
+        );
+
+        return practicanteGuardado;
     }
 
     public List<Practicante> obtenerTodos() {
@@ -66,5 +77,3 @@ public class PracticanteService {
         return practicanteRepository.findById(id).orElseThrow(() -> new RuntimeException("Practicante no encontrado"));
     }
 }
-
-

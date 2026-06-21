@@ -7,7 +7,6 @@ import lombok.Data;
 @Entity
 @Table(name = "practicantes") // Nombre en la base de datos
 public class Practicante {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Estrategia de creacion ID JPA
     private Long id;
@@ -15,7 +14,7 @@ public class Practicante {
     @Column(name = "nombre_completo", nullable = false)
     private String nombreCompleto;
 
-    @Column(name = "correo_electronico", nullable = false)
+    @Column(name = "correo_electronico", nullable = false, unique = true)
     private String correoElectronico;
 
     @Column(name = "carrera_universitaria")

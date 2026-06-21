@@ -20,3 +20,16 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
+
+  # Correo
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: josejesuscespedes@gmail.com
+    password: qptmhqvrghnyctzb
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
