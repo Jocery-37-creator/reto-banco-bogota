@@ -1,11 +1,12 @@
 export function Footer() {
   return (
-    <footer className="bg-blue-900 text-white py-12">
-      <div className="max-w-7xl mx-auto px-4">
+    // Contenedor que le da el espacio para flotar (márgenes laterales y separación del fondo)
+    <div className="w-full px-4 pb-6">
+      <footer className="bg-blue-900 text-white py-12 px-6 md:px-12 mx-auto max-w-8xl shadow-2xl shadow-blue-900/50 rounded-2xl transition-all duration-300">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
           {/* Logo Section */}
           <div className="flex flex-col items-center md:items-start">
-            <div className="w-48 h-16  rounded flex items-center justify-center">
+            <div className="w-48 h-16 rounded flex items-center justify-center">
               <img
                 src="/LogoFoot.png"
                 alt="Banco de Bogotá"
@@ -176,7 +177,7 @@ export function Footer() {
             </a>
           </div>
         </div>
-      </div>
-    </footer>
+      </footer>
+    </div>
   );
 }

@@ -4,6 +4,7 @@ import './index.css'
 import App from './App'
 import { Footer } from './components/Footer'
 
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
