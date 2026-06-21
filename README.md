@@ -43,6 +43,7 @@ El proyecto está construido bajo una arquitectura de **Monorepo**, dividiendo c
 ---
 
 ## Requisitos Previos
+> **Nota de Entorno:** Este proyecto fue desarrollado, contenerizado y probado nativamente en un entorno **Windows (10/11)**. Si bien las tecnologías utilizadas (Java, Node.js, Docker) son multiplataforma, los comandos de terminal descritos en esta guía están optimizados para ser ejecutados en PowerShell o CMD (Windows).
 
 Para ejecutar este proyecto en tu máquina local, asegúrate de tener instalado:
 * **Java JDK 21**
@@ -51,9 +52,26 @@ Para ejecutar este proyecto en tu máquina local, asegúrate de tener instalado:
 * **Maven**
 * **Administrador de bases de datos (postgreSQL 17)**
 
+## Guia de Instalación de Tecnologías Requeridas (Prerrequisitos)
+
+Para ejecutar este proyecto desde cero, asegúrese de tener instaladas las siguientes herramientas en su sistema operativo:
+
+1. **Java Development Kit (JDK) 21:**
+   * Descargue el instalador desde [Oracle](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html) o use distribuciones como Amazon Corretto.
+   * Verifique la instalación ejecutando en su terminal: `java -version`
+   * Valide que las variables de entorno y el path esta correctamente definido en el sistema, para validarlo entrar a la configuracion avanzada del sistema.
+2. **Node.js y npm:**
+   * Descargue la versión LTS (v18 o superior) desde la [página oficial de Node.js](https://nodejs.org/).
+   * Verifique la instalación: `node -v` y `npm -v`
+3. **Docker Desktop:**
+   * Requerido para levantar la base de datos sin configuraciones manuales. Descárguelo desde [Docker](https://www.docker.com/products/docker-desktop/).
+   * Asegúrese de que el motor de Docker esté corriendo en segundo plano antes de iniciar el proyecto.
+4. **Apache Maven:**
+   * Herramienta de construcción para el Back-End. Si utiliza un IDE como IntelliJ IDEA o Eclipse, Maven ya viene integrado.
+
 ---
 
-## ⚙️ Guía de Instalación y Ejecución
+## ⚙️ Guía Ejecución
 
 Sigue estos 3 pasos exactos para levantar el ecosistema completo:
 
@@ -71,5 +89,26 @@ cd backend
 mvn spring-boot:run
 ```
 En su primer arranque, Hibernate leerá el modelo de datos e instanciará automáticamente el esquema de tablas dentro de PostgreSQL. El servidor web quedará escuchando peticiones en http://localhost:8080.
+
+### Paso 3: Instalar y Desplegar el Cliente (Front-End)
+Abra una tercera terminal, navega al directorio del cliente, instale los paquetes de Node y arranque el servidor de desarrollo de Vite:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+El compilador en tiempo real desplegará la interfaz gráfica del usuario, la cual estará accesible inmediatamente desde su navegador web en la dirección http://localhost:5173.
+
+---
+## Pruebas Unitarias
+Para validar que los cambios estructurales no afecten las funcionalidades core de la aplicación, puede correr las pruebas unitarias automatizadas ejecutando el motor de Maven de la siguiente manera:
+```
+cd backend
+mvn test
+```
+Se realizaron dos pruebas unitarias sencillas que establecen conexion con la logica de negocio interna de la gestion de practicantes. 
+
+
+
 
 
