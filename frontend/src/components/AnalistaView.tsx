@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 interface Candidato {
   id: number;
-  nombreCompleto: string;       // Antes: nombre
-  correoElectronico: string;    // Antes: correo
-  carreraUniversitaria: string; // Antes: carrera
-  semestreActual: number;       // Antes: semestre
-  rutaHojaVida: string;         // Antes: hojaVida
+  nombreCompleto: string;       
+  correoElectronico: string;   
+  carreraUniversitaria: string; 
+  semestreActual: number;       
+  rutaHojaVida: string;         
   estado: string;
 }
 
@@ -14,25 +14,26 @@ const AnalistaView: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [usuario, setUsuario] = useState('');
   const [contrasena, setContrasena] = useState('');
-  const [errorLogin, setErrorLogin] = useState(''); // 
+  const [errorLogin, setErrorLogin] = useState('');
 
-  // Lista de candidatos incial
   const [candidatos, setCandidatos] = useState<Candidato[]>([]);
+  
+  // Estados para Búsqueda y Ordenamiento
+  const [busqueda, setBusqueda] = useState('');
+  const [ordenConfig, setOrdenConfig] = useState<{ key: keyof Candidato, direccion: 'asc' | 'desc' } | null>(null);
 
-  // Este hook se dispara cuando el analista hace login exitoso
   useEffect(() => {
     if (isLoggedIn) {
       cargarCandidatos();
     }
   }, [isLoggedIn]);
 
-  // Función para pedirle los datos a Java
   const cargarCandidatos = async () => {
     try {
       const response = await fetch('http://localhost:8080/api/practicantes');
       if (response.ok) {
         const data = await response.json();
-        setCandidatos(data); // Llenamos la tabla con lo que mande la base de datos
+        setCandidatos(data);
       }
     } catch (error) {
       console.error("Error obteniendo candidatos:", error);
@@ -45,22 +46,17 @@ const AnalistaView: React.FC = () => {
 
     if (usuario.trim() && contrasena.trim()) {
       try {
-        // Hacemos el POST al endpoint que acabas de crear
         const response = await fetch('http://localhost:8080/api/analistas/login', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ usuario, contrasena }),
         });
 
         if (response.ok) {
-          // Si Java responde 200 OK, las credenciales son correctas
           setIsLoggedIn(true);
           setUsuario('');
           setContrasena('');
         } else {
-          // Si Java responde 401, falló la autenticación
           setErrorLogin('Usuario o contraseña incorrectos. Intenta de nuevo.');
         }
       } catch (error) {
@@ -74,15 +70,15 @@ const AnalistaView: React.FC = () => {
     setIsLoggedIn(false);
     setUsuario('');
     setContrasena('');
+    setBusqueda(''); // Limpiamos filtros al salir
+    setOrdenConfig(null);
   };
 
   const cambiarEstado = async (id: number, nuevoEstado: string) => {
     try {
       const response = await fetch(`http://localhost:8080/api/practicantes/${id}/estado`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estado: nuevoEstado }),
       });
 
@@ -96,40 +92,93 @@ const AnalistaView: React.FC = () => {
     }
   };
 
-
   const toggleViabilidad = (id: number, estadoActual: string) => {
     const nuevoEstado = estadoActual === 'Viable' ? 'No viable' : 'Viable';
     cambiarEstado(id, nuevoEstado);
   };
 
   const descargarPDF = (archivoId: number) => {
-    // Abrimos el endpoint de Java que devuelve el PDF en una nueva pestaña
     window.open(`http://localhost:8080/api/practicantes/${archivoId}/cv`, '_blank');
   };
 
   const getEstadoColor = (estado: string) => {
     switch (estado) {
-      case 'Viable':
-        return 'bg-green-100 text-green-800';
-      case 'No viable':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-yellow-100 text-yellow-800';
+      case 'Viable': return 'bg-green-100 text-green-800 border border-green-200';
+      case 'No viable': return 'bg-red-100 text-red-800 border border-red-200';
+      default: return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
     }
   };
 
   const getEstadoTexto = (estado: string) => {
     switch (estado) {
-      case 'Viable':
-        return 'Viable';
-      case 'No viable':
-        return 'No Viable';
-      default:
-        return 'Pendiente';
+      case 'Viable': return 'Viable';
+      case 'No viable': return 'No Viable';
+      default: return 'Pendiente';
     }
   };
 
-  // VISTA 1: LOGIN
+  // --- LÓGICA DE FILTRADO Y ORDENAMIENTO (EL CEREBRO) ---
+  const solicitarOrden = (key: keyof Candidato) => {
+    let direccion: 'asc' | 'desc' = 'asc';
+    if (ordenConfig && ordenConfig.key === key && ordenConfig.direccion === 'asc') {
+      direccion = 'desc';
+    }
+    setOrdenConfig({ key, direccion });
+  };
+
+  const candidatosProcesados = useMemo(() => {
+    let lista = [...candidatos];
+
+    // 1. Filtrado por barra de búsqueda
+    if (busqueda) {
+      const termino = busqueda.toLowerCase();
+      lista = lista.filter(c => 
+        c.nombreCompleto.toLowerCase().includes(termino) ||
+        c.correoElectronico.toLowerCase().includes(termino) ||
+        (c.carreraUniversitaria && c.carreraUniversitaria.toLowerCase().includes(termino)) ||
+        c.estado.toLowerCase().includes(termino) ||
+        c.id.toString().includes(termino)
+      );
+    }
+
+    // 2. Ordenamiento inteligente (ignorando mayúsculas/minúsculas)
+    if (ordenConfig) {
+      lista.sort((a, b) => {
+        let valA = a[ordenConfig.key];
+        let valB = b[ordenConfig.key];
+        
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        if (valA < valB) return ordenConfig.direccion === 'asc' ? -1 : 1;
+        if (valA > valB) return ordenConfig.direccion === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return lista;
+  }, [candidatos, busqueda, ordenConfig]);
+
+  // Función auxiliar para dibujar los encabezados ordenables limpios
+  const renderHeader = (key: keyof Candidato, label: string) => {
+    const isSorted = ordenConfig?.key === key;
+    return (
+      <th 
+        className="px-6 py-4 text-left text-sm font-bold cursor-pointer hover:bg-blue-800 transition-colors group select-none"
+        onClick={() => solicitarOrden(key)}
+      >
+        <div className="flex items-center gap-2">
+          {label}
+          {/* Solo mostramos la flecha si está activo, de lo contrario se oculta */}
+          <span className={`text-xs ${isSorted ? 'text-yellow-400' : 'text-transparent group-hover:text-blue-400/50'}`}>
+            {isSorted ? (ordenConfig.direccion === 'asc' ? '↑' : '↓') : '↓'}
+          </span>
+        </div>
+      </th>
+    );
+  };
+
+  // --- VISTA 1: LOGIN ---
   if (!isLoggedIn) {
     return (
       <div className="min-h-fit flex items-center justify-center p-4 mt-10">
@@ -146,14 +195,8 @@ const AnalistaView: React.FC = () => {
             </div>
           )}
           <form onSubmit={handleLogin} className="space-y-6">
-            {/* Campo Usuario */}
             <div>
-              <label
-                htmlFor="usuario"
-                className="block text-sm font-semibold text-blue-900 mb-2"
-              >
-                Usuario
-              </label>
+              <label htmlFor="usuario" className="block text-sm font-semibold text-blue-900 mb-2">Usuario</label>
               <input
                 id="usuario"
                 type="text"
@@ -164,15 +207,8 @@ const AnalistaView: React.FC = () => {
                 className="w-full px-4 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-blue-900 transition-colors"
               />
             </div>
-
-            {/* Campo Contraseña */}
             <div>
-              <label
-                htmlFor="contrasena"
-                className="block text-sm font-semibold text-blue-900 mb-2"
-              >
-                Contraseña
-              </label>
+              <label htmlFor="contrasena" className="block text-sm font-semibold text-blue-900 mb-2">Contraseña</label>
               <input
                 id="contrasena"
                 type="password"
@@ -183,28 +219,20 @@ const AnalistaView: React.FC = () => {
                 className="w-full px-4 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-blue-900 transition-colors"
               />
             </div>
-
-            {/* Botón Ingresar */}
-            <button
-              type="submit"
-              className="w-full bg-blue-900 text-white font-bold py-3 rounded-md hover:bg-blue-800 transition-colors shadow-lg"
-            >
+            <button type="submit" className="w-full bg-blue-900 text-white font-bold py-3 rounded-md hover:bg-blue-800 transition-colors shadow-lg">
               Ingresar
             </button>
           </form>
-
-          <p className="text-center text-gray-500 text-sm mt-6">
-            © 2024 Banco de Bogotá - Portal de Selección
-          </p>
+          <p className="text-center text-gray-500 text-sm mt-6">© 2024 Banco de Bogotá - Portal de Selección</p>
         </div>
       </div>
     );
   }
 
-  // VISTA 2: DASHBOARD DEL ANALISTA
+  // --- VISTA 2: DASHBOARD DEL ANALISTA ---
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Header Superior */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4 flex justify-between items-center border-b border-gray-200 mb-6">
         <h1 className="text-3xl font-bold text-blue-900">Portal de Selección</h1>
         <button
@@ -215,86 +243,90 @@ const AnalistaView: React.FC = () => {
         </button>
       </div>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Título de la sección */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-blue-900 mb-2">
-            Candidatos para Revisión
-          </h2>
-          <p className="text-gray-600">
-            Total de candidatos: <span className="font-bold">{candidatos.length}</span>
-          </p>
+        
+        {/* Título unificado y Barra de Búsqueda Elegante */}
+        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h2 className="text-2xl font-bold text-blue-900 mb-2">
+              Candidatos para Revisión
+            </h2>
+            <p className="text-gray-600 text-sm">
+              Mostrando <span className="font-bold text-blue-900">{candidatosProcesados.length}</span> de {candidatos.length} registros
+            </p>
+          </div>
+          
+          <div className="w-full md:w-80 relative">
+             <span className="absolute left-3 top-2.5 text-gray-400"></span>
+             <input
+              type="text"
+              placeholder="Buscar candidato, carrera..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-900 transition-colors shadow-sm"
+            />
+          </div>
         </div>
 
         {/* Tabla de Candidatos */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-blue-900 text-white">
+              <thead className="bg-blue-900 text-white border-b-4 border-yellow-400">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-bold">ID</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold">Nombre</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold">Correo</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold">Carrera</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold">Semestre</th>
+                  {renderHeader('id', 'ID')}
+                  {renderHeader('nombreCompleto', 'Nombre')}
+                  {renderHeader('correoElectronico', 'Correo')}
+                  {renderHeader('carreraUniversitaria', 'Carrera')}
+                  {renderHeader('semestreActual', 'Semestre')}
                   <th className="px-6 py-4 text-left text-sm font-bold">Hoja de Vida</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold">Estado</th>
+                  {renderHeader('estado', 'Estado')}
                   <th className="px-6 py-4 text-left text-sm font-bold">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {candidatos.map((candidato, index) => (
-                  <tr
-                    key={candidato.id}
-                    className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                  >
-                    <td className="px-6 py-4 text-sm font-semibold text-blue-900">
-                      {candidato.id}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {candidato.nombreCompleto}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {candidato.correoElectronico}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {candidato.carreraUniversitaria}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {candidato.semestreActual}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <button
-                        onClick={() => descargarPDF(candidato.id)}
-                        className="text-blue-600 hover:text-blue-900 font-semibold underline transition-colors"
-                      >
-                        📄 Descargar
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <span
-                        className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap min-w-[80px] ${getEstadoColor(
-                          candidato.estado
-                        )}`}
-                      >
-                        {getEstadoTexto(candidato.estado)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <button
-                        onClick={() => toggleViabilidad(candidato.id, candidato.estado)}
-                        className={`w-32 px-2 py-2 rounded-md font-bold text-xs transition-all shadow-sm border-2 ${
-                          candidato.estado === 'Viable'
-                            ? 'bg-green-500 border-green-500 text-white' 
-                            : 'bg-white border-gray-300 text-gray-700 hover:border-green-500 hover:text-green-600'
-                        }`}
-                      >
-                        {candidato.estado === 'Viable' ? '✓ Viable' : 'Marcar Viable'}
-                      </button>
+                {candidatosProcesados.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500 font-medium">
+                      No se encontraron candidatos que coincidan con tu búsqueda.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  candidatosProcesados.map((candidato, index) => (
+                    <tr key={candidato.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}>
+                      <td className="px-6 py-4 text-sm font-semibold text-blue-900">{candidato.id}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900 font-medium">{candidato.nombreCompleto}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{candidato.correoElectronico}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{candidato.carreraUniversitaria}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{candidato.semestreActual}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <button
+                          onClick={() => descargarPDF(candidato.id)}
+                          className="text-blue-600 hover:text-blue-900 font-semibold underline transition-colors flex items-center gap-1"
+                        >
+                          📄 Descargar
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap min-w-[80px] ${getEstadoColor(candidato.estado)}`}>
+                          {getEstadoTexto(candidato.estado)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <button
+                          onClick={() => toggleViabilidad(candidato.id, candidato.estado)}
+                          className={`w-32 px-2 py-2 rounded-md font-bold text-xs transition-all shadow-sm border-2 ${
+                            candidato.estado === 'Viable'
+                              ? 'bg-green-500 border-green-500 text-white hover:bg-green-600' 
+                              : 'bg-white border-gray-300 text-gray-700 hover:border-green-500 hover:text-green-600'
+                          }`}
+                        >
+                          {candidato.estado === 'Viable' ? '✘ No Viable' : '✔ Marcar Viable'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -302,7 +334,7 @@ const AnalistaView: React.FC = () => {
 
         {/* Footer Info */}
         <div className="mt-8 text-center text-gray-600 text-sm">
-          <p>© 2024 Banco de Bogotá - Centro de Excelencia</p>
+          <p>© 2026 Banco de Bogotá - Centro de Excelencia</p>
         </div>
       </main>
     </div>
