@@ -14,6 +14,7 @@ const AnalistaView: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [usuario, setUsuario] = useState('');
   const [contrasena, setContrasena] = useState('');
+  const [errorLogin, setErrorLogin] = useState(''); // 
 
   // Lista de candidatos incial
   const [candidatos, setCandidatos] = useState<Candidato[]>([]);
@@ -38,12 +39,34 @@ const AnalistaView: React.FC = () => {
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorLogin('');
+
     if (usuario.trim() && contrasena.trim()) {
-      setIsLoggedIn(true);
-      setUsuario('');
-      setContrasena('');
+      try {
+        // Hacemos el POST al endpoint que acabas de crear
+        const response = await fetch('http://localhost:8080/api/analistas/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ usuario, contrasena }),
+        });
+
+        if (response.ok) {
+          // Si Java responde 200 OK, las credenciales son correctas
+          setIsLoggedIn(true);
+          setUsuario('');
+          setContrasena('');
+        } else {
+          // Si Java responde 401, falló la autenticación
+          setErrorLogin('Usuario o contraseña incorrectos. Intenta de nuevo.');
+        }
+      } catch (error) {
+        console.error("Error de conexión:", error);
+        setErrorLogin('No se pudo conectar con el servidor.');
+      }
     }
   };
 
@@ -115,7 +138,11 @@ const AnalistaView: React.FC = () => {
             </h1>
             <div className="w-16 h-1 bg-yellow-400 mx-auto mt-2"></div>
           </div>
-
+          {errorLogin && (
+            <div className="mb-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm font-semibold text-center">
+              {errorLogin}
+            </div>
+          )}
           <form onSubmit={handleLogin} className="space-y-6">
             {/* Campo Usuario */}
             <div>
