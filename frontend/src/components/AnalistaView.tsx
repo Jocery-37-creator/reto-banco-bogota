@@ -92,11 +92,6 @@ const AnalistaView: React.FC = () => {
     }
   };
 
-  const toggleViabilidad = (id: number, estadoActual: string) => {
-    const nuevoEstado = estadoActual === 'Viable' ? 'No viable' : 'Viable';
-    cambiarEstado(id, nuevoEstado);
-  };
-
   const descargarPDF = (archivoId: number) => {
     window.open(`http://localhost:8080/api/practicantes/${archivoId}/cv`, '_blank');
   };
@@ -313,16 +308,33 @@ const AnalistaView: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        <button
-                          onClick={() => toggleViabilidad(candidato.id, candidato.estado)}
-                          className={`w-32 px-2 py-2 rounded-md font-bold text-xs transition-all shadow-sm border-2 ${
-                            candidato.estado === 'Viable'
-                              ? 'bg-green-500 border-green-500 text-white hover:bg-green-600' 
-                              : 'bg-white border-gray-300 text-gray-700 hover:border-green-500 hover:text-green-600'
-                          }`}
-                        >
-                          {candidato.estado === 'Viable' ? '✘ No Viable' : '✔ Marcar Viable'}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {/* Botón Viable */}
+                          <button
+                            onClick={() => cambiarEstado(candidato.id, 'Viable')}
+                            disabled={candidato.estado === 'Viable'}
+                            className={`px-3 py-1.5 rounded-md font-bold text-xs transition-all border-2 ${
+                              candidato.estado === 'Viable'
+                                ? 'bg-green-500 border-green-500 text-white cursor-default shadow-inner'
+                                : 'bg-white border-green-500 text-green-600 hover:bg-green-50'
+                            }`}
+                          >
+                            ✔ Viable
+                          </button>
+
+                          {/* Botón No Viable */}
+                          <button
+                            onClick={() => cambiarEstado(candidato.id, 'No viable')}
+                            disabled={candidato.estado === 'No viable'}
+                            className={`px-3 py-1.5 rounded-md font-bold text-xs transition-all border-2 ${
+                              candidato.estado === 'No viable'
+                                ? 'bg-red-500 border-red-500 text-white cursor-default shadow-inner'
+                                : 'bg-white border-red-500 text-red-600 hover:bg-red-50'
+                            }`}
+                          >
+                            ✘ No Viable
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

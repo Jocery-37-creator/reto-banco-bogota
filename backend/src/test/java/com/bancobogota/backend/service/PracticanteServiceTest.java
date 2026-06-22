@@ -78,10 +78,10 @@ public class PracticanteServiceTest {
         practicanteInicial.setNombreCompleto("María López");
         practicanteInicial.setEstado("Pendiente");
 
-        // Amaestramos al clon para el paso 1 (Buscar): "Cuando busquen el ID 2, entrega a María"
+        // Intruccion del clon (Buscar): "Cuando busquen el ID 2, entrega a María"
         when(practicanteRepository.findById(idBuscado)).thenReturn(Optional.of(practicanteInicial));
 
-        // Amaestramos al clon para el paso 3 (Guardar): "Cuando te manden a guardar CUALQUIER practicante, simplemente devuélvelo como si la BD lo hubiera aceptado"
+        // Intruccion del clon (Guardar): "Cuando te manden a guardar CUALQUIER practicante, simplemente devuélvelo como si la BD lo hubiera aceptado"
         when(practicanteRepository.save(any(Practicante.class))).thenReturn(practicanteInicial);
 
         System.out.println("\n[TEST] Estado de María ANTES de la acción: " + practicanteInicial.getEstado());

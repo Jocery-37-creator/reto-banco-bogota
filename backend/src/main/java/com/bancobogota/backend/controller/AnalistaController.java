@@ -16,7 +16,7 @@ public class AnalistaController {
     public AnalistaController(AnalistaService service) {
         this.service = service;
     }
-
+    // Validar credenciales
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginAnalistaDTO loginDTO) {
         boolean esValido = service.validarCredenciales(loginDTO.getUsuario(), loginDTO.getContrasena());

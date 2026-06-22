@@ -20,15 +20,20 @@ public class PracticanteService {
     private final String subida_dir = "uploads/"; // Directorio de subida de HV
 
     private final PracticanteRepository practicanteRepository;
-    private final EmailService emailService; // <-- 1. Declaramos el servicio de correo
+    private final EmailService emailService;
 
-    // 2. Modificamos el constructor para aplicar la Inyección de Dependencias (DI)
+    // Inyección de Dependencias (DI)
     public PracticanteService(PracticanteRepository repository, EmailService emailService) {
         this.practicanteRepository = repository;
         this.emailService = emailService;
     }
 
     public Practicante registrarPracticante(PracticanteDTO dto) throws IOException {
+        //Validacion si el correo ya esta registrado
+        if (practicanteRepository.existsByCorreoElectronico(dto.getCorreoElectronico())) {
+            throw new IllegalArgumentException("El correo electrónico ya se encuentra registrado en el sistema.");
+        }
+
         Path uploadPath = Paths.get(subida_dir);
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
@@ -51,7 +56,7 @@ public class PracticanteService {
         // Guardamos el registro en la base de datos
         Practicante practicanteGuardado = practicanteRepository.save(nuevoPracticante);
 
-        // 3. ¡Disparamos el correo electrónico de confirmación!
+        // Servicio de correo electronico
         log.info("Iniciando envío de correo de confirmación para: {}", practicanteGuardado.getCorreoElectronico());
         emailService.enviarCorreoConfirmacion(
                 practicanteGuardado.getCorreoElectronico(),
@@ -61,6 +66,7 @@ public class PracticanteService {
         return practicanteGuardado;
     }
 
+    // Demas metodos de logica de negocio
     public List<Practicante> obtenerTodos() {
         return practicanteRepository.findAll();
     }

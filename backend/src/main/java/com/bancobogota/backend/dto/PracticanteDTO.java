@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class PracticanteDTO {
-
+    // Objeto de comunicacion con el frontend
     @NotBlank(message = "El nombre completo no puede estar vacío")
     private String nombreCompleto;
 
@@ -21,5 +21,5 @@ public class PracticanteDTO {
     private Integer semestreActual;
 
     @NotNull(message = "Debe adjuntar su hoja de vida en formato PDF")
-    private MultipartFile hojaDeVida; // Aquí recibiremos el archivo físico
+    private MultipartFile hojaDeVida;
 }

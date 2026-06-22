@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PracticanteRepository extends JpaRepository<Practicante, Long>{
     // Metodos heredados de la interfaz JpaRepository
+    boolean existsByCorreoElectronico(String correoElectronico);
 }

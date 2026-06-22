@@ -30,9 +30,21 @@ public class PracticanteController {
 
     //Endpoint POST: Recibe formulario de registro de practicante
     @PostMapping
-    public ResponseEntity<Practicante> registrarPracticante(@Valid @ModelAttribute PracticanteDTO dto) throws IOException {
-        Practicante nuevoPracticante = service.registrarPracticante(dto);
-        return new ResponseEntity<>(nuevoPracticante, HttpStatus.CREATED);
+    public ResponseEntity<?> registrarPracticante(@Valid @ModelAttribute PracticanteDTO dto) {
+        try {
+            Practicante nuevoPracticante = service.registrarPracticante(dto);
+            // Practicante creado con estado pendiente
+            return ResponseEntity.status(HttpStatus.CREATED).body(nuevoPracticante);
+
+        } catch (IllegalArgumentException e) {
+            // Correo ya esta registrado
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+
+        } catch (Exception e) {
+            // Cualquier otro error
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor: " + e.getMessage());
+        }
     }
 
     // Endpoint GET: Listar todos los practicantes registrados
@@ -54,16 +66,16 @@ public class PracticanteController {
     @GetMapping("/{id}/cv")
     public ResponseEntity<?> descargarCV(@PathVariable Long id) {
         try {
-            // 1. Usamos tu metodo
+            // Obtener el practicante por ID
             Practicante practicante = service.obtenerPracticanteId(id);
 
-            // 2. Verificamos si hay ruta en la base de datos
+            // Existe ruta de hoja de vida o no
             if (practicante.getRutaHojaVida() == null || practicante.getRutaHojaVida().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("Error: El practicante existe, pero la columna 'ruta_hoja_vida' está vacía (NULL) en la base de datos.");
             }
 
-            // 3. Verificamos si el archivo físico realmente existe en tu computadora
+            // Existe fisicamente o no
             Path filepath = Paths.get("uploads").resolve(practicante.getRutaHojaVida()).normalize();
             Resource resource = new UrlResource(filepath.toUri());
 
@@ -72,13 +84,12 @@ public class PracticanteController {
                         .body("Error: La ruta está en la base de datos (" + practicante.getRutaHojaVida() + "), pero el archivo PDF no se encuentra físicamente en esa carpeta de tu disco duro.");
             }
 
-            return ResponseEntity.ok()
+            return ResponseEntity.ok() // Retornar el archivo PDF como respuesta
                     .contentType(MediaType.APPLICATION_PDF)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"Hoja_Vida_" + id + ".pdf\"")
                     .body(resource);
 
         } catch (RuntimeException e) {
-            // Captura la excepción que lanzaste en tu service ("Practicante no encontrado")
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Error: No existe ningún practicante con el ID " + id + " en la base de datos.");
         } catch (Exception e) {
