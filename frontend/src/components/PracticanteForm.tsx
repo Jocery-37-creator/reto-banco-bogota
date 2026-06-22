@@ -8,17 +8,19 @@ import {
   UploadCloud,
 } from "lucide-react"
 
+// Define la estructura de los datos de texto del formulario
 type FormState = {
   fullName: string
   email: string
   career: string
   semester: string
 }
-
+// Define los posibles errores de validación para cada campo
 type FormErrors = Partial<Record<keyof FormState | "resume", string>>
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
 
+// Componente principal para el registro de nuevos candidatos
 export function PracticanteForm() {
   const [form, setForm] = useState<FormState>({
     fullName: "",
@@ -34,11 +36,13 @@ export function PracticanteForm() {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Actualiza el valor de un campo y limpia su mensaje de error en pantalla
   function updateField(field: keyof FormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
     setErrors((prev) => ({ ...prev, [field]: undefined }))
   }
 
+  // Comprueba que el archivo cumpla con el formato PDF y el peso permitido
   function validateFile(file: File): string | null {
     if (file.type !== "application/pdf") {
       return "El archivo debe estar en formato PDF."
@@ -49,6 +53,7 @@ export function PracticanteForm() {
     return null
   }
 
+  // Procesa el documento seleccionado y asigna el archivo o el error correspondiente
   function handleFile(file: File | undefined | null) {
     if (!file) return
     const error = validateFile(file)
@@ -61,77 +66,87 @@ export function PracticanteForm() {
     setResume(file)
   }
 
+  // Captura y procesa el archivo cuando el usuario lo suelta sobre el área de carga
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault()
     setIsDragging(false)
     handleFile(e.dataTransfer.files?.[0])
   }
 
-  function validateForm(): FormErrors {
-    const nextErrors: FormErrors = {}
-    if (!form.fullName.trim()) {
-      nextErrors.fullName = "El nombre completo es obligatorio."
-    }
-    if (!form.email.trim()) {
-      nextErrors.email = "El correo electrónico es obligatorio."
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      nextErrors.email = "Ingresa un correo electrónico válido."
-    }
-
-    if (!form.career.trim()) {
-      nextErrors.career = "La carrera universitaria es obligatoria."
-    }
-
-    if (!form.semester.trim()) {
-      nextErrors.semester = "El semestre es obligatorio."
-    } else if (Number(form.semester) < 1) {
-      nextErrors.semester = "El semestre debe ser mayor a 0."
-    }
-
-    if (!resume) {
-      nextErrors.resume = "Adjunta tu hoja de vida en formato PDF."
-    }
-    return nextErrors
-  }
-
-async function handleSubmit(e: React.FormEvent) {
+  // Envio de formulario 
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const nextErrors = validateForm()
-    setErrors(nextErrors)
-    if (Object.keys(nextErrors).length > 0) return
+
+    // Validaciones locales básicas antes de enviar
+    const newErrors: FormErrors = {}
+    if (!form.fullName.trim()) newErrors.fullName = "El nombre completo es obligatorio."
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!form.email.trim()) {newErrors.email = "El correo electrónico es obligatorio."} else if (!emailRegex.test(form.email)) {
+      newErrors.email = "Ingresa un correo electrónico válido (ej: usuario@correo.com)."
+    }
+    
+    if (!form.career.trim()) newErrors.career = "La carrera universitaria es obligatoria."
+    if (!form.semester.trim()) { newErrors.semester = "El semestre actual es obligatorio." } else if (Number(form.semester) < 1) {
+      newErrors.semester = "El semestre debe ser mayor a 0."
+    }
+    if (!resume) newErrors.resume = "La hoja de vida en formato PDF es obligatoria."
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
 
     setSubmitting(true)
 
+    // Construcción del FormData mapeando las llaves de React con los atributos del DTO de Java
+    const formData = new FormData()
+    formData.append("nombreCompleto", form.fullName)
+    formData.append("correoElectronico", form.email)
+    formData.append("carreraUniversitaria", form.career)
+    formData.append("semestreActual", form.semester)
+    if (resume) {
+      formData.append("hojaDeVida", resume)
+    }
+
     try {
-      // 1. Empaquetamos los datos exactamente como los espera PracticanteDTO.java
-      const formDataToSend = new FormData();
-      formDataToSend.append('nombreCompleto', form.fullName);
-      formDataToSend.append('correoElectronico', form.email);
-      formDataToSend.append('carreraUniversitaria', form.career);
-      formDataToSend.append('semestreActual', form.semester);
-      
-      if (resume) {
-        // 'hojaDeVida' coincide con el nombre del MultipartFile en el DTO
-        formDataToSend.append('hojaDeVida', resume); 
+      const response = await fetch("http://localhost:8080/api/practicantes", {
+        method: "POST",
+        body: formData,
+      })
+
+      //
+      if (response.status === 409) {
+        const mensajeServidor = await response.text()
+
+
+        setErrors((prev) => ({
+          ...prev,
+          email: mensajeServidor
+        }))
+
+        setSubmitting(false)
+        return // Detenemos el flujo para que no marque como enviado exitoso
       }
 
-      // 2. Enviamos el POST a tu controlador de Java
-      const response = await fetch('http://localhost:8080/api/practicantes', {
-        method: 'POST',
-        // No enviamos headers manualmente; fetch y FormData se encargan de poner "multipart/form-data"
-        body: formDataToSend, 
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error del servidor: ${response.status}`);
+      if (response.ok) {
+        setSubmitted(true)
+        // Se limpian los campos
+        setForm({
+          fullName: "",
+          email: "",
+          career: "",
+          semester: "",
+        })
+        setResume(null)
+      } else {
+        // Por si ocurre otro tipo de error 
+        const textoError = await response.text()
+        alert("Ocurrió un inconveniente al registrar la postulación: " + textoError)
       }
-
-      // 3. Si Spring Boot responde 201 CREATED o 200 OK, mostramos el éxito
-      setSubmitted(true)
-      
     } catch (error) {
-      console.error("Error conectando con el servidor:", error);
-      alert("No se pudo conectar con el servidor. Verifica que Spring Boot esté corriendo en el puerto 8080.");
+      console.error("Error al conectar con la API:", error)
+      alert("No se pudo establecer conexión con el servidor de Spring Boot.")
     } finally {
       setSubmitting(false)
     }
@@ -171,6 +186,15 @@ async function handleSubmit(e: React.FormEvent) {
             tu solicitud. El equipo de Talento Humano del Banco de Bogotá se pondrá
             en contacto contigo pronto.
           </p>
+          <div className="mt-8">
+            <button
+              type="button"
+              onClick={() => setSubmitted(false)}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-brand underline decoration-transparent transition-all hover:decoration-brand/50 hover:text-brand/80"
+            >
+              <span>←</span> Volver a registrar otro candidato
+            </button>
+          </div>
         </div>
       ) : (
         <form
@@ -258,12 +282,12 @@ async function handleSubmit(e: React.FormEvent) {
               error={errors.resume}
             >
               {resume ? (
-                <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary/50 p-3">
-                  <div className="flex min-w-0 items-center gap-3">
+                <div className="flex items-center min-w-0 justify-between gap-3 rounded-xl border border-border bg-secondary/50 p-3">
+                  <div className="flex min-w-0 items-center gap-3 w-full min-w-0">
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand/10">
-                      <FileText className="size-5 text-brand" aria-hidden="true" />
+                      <FileText className="size-5 shrink-0 text-brand" aria-hidden="true" />
                     </span>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-card-foreground">
                         {resume.name}
                       </p>
