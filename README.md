@@ -1,3 +1,4 @@
+> Proyecto realizado por: Jose Jesus Cespedes Rivera, estudiante de decimo semestre en Ingenieria de Sistemas de la Universidad Distrital.
 # Plataforma de Selección de Practicantes - CoE Desarrollo
 
 Una plataforma moderna (Single Page Application) diseñada para el Centro de Excelencia (CoE) del Banco de Bogotá. Permite a los postulantes registrar sus datos y hojas de vida, y a los analistas filtrar y gestionar las candidaturas mediante un panel de control interactivo.
