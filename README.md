@@ -112,39 +112,21 @@ Se realizaron dos pruebas unitarias sencillas que establecen conexion con la log
 
 ## Evidencias Visuales y Capturas de Pantalla
 
-> **Nota:** Para asegurar la correcta visualización de las imágenes en GitHub, guarde sus capturas en una carpeta llamada `docs/` o `assets/` en la raíz de su proyecto local y apunte las rutas de la siguiente manera.
-
 ### ⚙️ Sección A: Ejecución Técnica del Sistema
 
 #### 1. Infraestructura Activa en Docker (Base de Datos)
-Muestra los contenedores de PostgreSQL inicializados y corriendo correctamente en segundo plano.
-![Contenedores de Docker](docs/R_EJECUCION_DOCKER.png)
+![Contenedores de Docker](docs/Ejecucion_docker.jpg)
 
 #### 2. Servidor Spring Boot en Ejecución (Tomcat Puerto 8080)
-Evidencia del Back-End compilando con éxito y conectándose a la base de datos contenerizada.
-![Arranque del Back-End](docs/R_ARRANQUE_SPRING.png)
+![Arranque del Back-End](docs/Arranque_spring.jpg)
 
-#### 3. Suite de Pruebas Unitarias Aprobada (JUnit & Mockito)
-Captura del comando `mvn test` arrojando un resultado exitoso (`BUILD SUCCESS`) con cero fallos en memoria RAM.
-![Resultado de Pruebas Unitarias](docs/R_PRUEBAS_SUCCESS.png)
+#### 3. Levantamiento del Frontend (React)
+![Arranque del Front-End](docs/Arranque_react.jpg)
 
 ---
-
-### 💻 Sección B: Interfaces de Usuario e Integración (UI/UX)
-
-#### 4. Formulario de Registro (Rol Practicante)
-Vista completa de la interfaz del aspirante con las validaciones de campos obligatorios activas.
-![Formulario de Practicantes](docs/R_VISTA_FORMULARIO.png)
-
-#### 5. Confirmación de Postulación en Tiempo Real (Evidencia Correo SMTP)
-Captura de pantalla de la bandeja de entrada real de Gmail mostrando la notificación automatizada despachada por el servidor.
-![Correo Electrónico Recibido](docs/R_EVIDENCIA_CORREO.png)
-
-#### 6. Portal de Selección e Inserción de Datos (Rol Analista)
-Demostración de la tabla dinámica con el buscador unificado por texto y el sistema de ordenamiento por cabeceras interactivo.
-![Panel de Control de Analistas](docs/R_DASHBOARD_ANALISTA.png)
-
-
-
+# Credenciales de acceso
+Puede iniciar sesión en el panel de analistas en la vista UI utilizando cualquiera de las siguientes credenciales cargadas automaticamente: 
+* **Usuarios: maria, diana, camilo**
+* **Contraseña para todos los usuarios: admin123**
 
 
