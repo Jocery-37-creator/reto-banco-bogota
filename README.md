@@ -106,7 +106,7 @@ Para validar que los cambios estructurales no afecten las funcionalidades core d
 cd backend
 mvn test
 ```
-Se realizaron dos pruebas unitarias sencillas que establecen conexion con la logica de negocio interna de la gestion de practicantes. 
+Se realizaron tres pruebas unitarias sencillas que establecen conexion con la logica de negocio interna de la gestion de practicantes. 
 
 ---
 
