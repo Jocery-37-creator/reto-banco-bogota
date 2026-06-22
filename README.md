@@ -20,7 +20,7 @@ El proyecto está construido bajo una arquitectura de **Monorepo**, dividiendo c
 
 ### Back-End
 * **Java 21 & Spring Boot 4.1:** El estándar de la industria bancaria.
-* **Arquitectura Multicapa:** Separación estricta por responsabilidades (`Controller`, `Service`, `Repository`, `Model`, `DTO`).
+* **Arquitectura Multicapa:** Separación estricta por responsabilidades (`Controller`, `Service`, `Repository`, `Model`, `DTO`, `Config`).
 * **Spring Data JPA & Hibernate:** ORM para persistencia de datos orientada a objetos sin SQL manual.
 * **Jakarta Validation:** Validación estricta de DTOs en las peticiones HTTP.
 * **Lombok:** Reducción de código repetitivo (Boilerplate).
@@ -71,7 +71,7 @@ Para ejecutar este proyecto desde cero, asegúrese de tener instaladas las sigui
 
 ---
 
-## ⚙️ Guía Ejecución
+## ⚙️ Guía de ejecución
 
 Sigue estos 3 pasos exactos para levantar el ecosistema completo:
 
@@ -107,6 +107,42 @@ cd backend
 mvn test
 ```
 Se realizaron dos pruebas unitarias sencillas que establecen conexion con la logica de negocio interna de la gestion de practicantes. 
+
+---
+
+## Evidencias Visuales y Capturas de Pantalla
+
+> **Nota:** Para asegurar la correcta visualización de las imágenes en GitHub, guarde sus capturas en una carpeta llamada `docs/` o `assets/` en la raíz de su proyecto local y apunte las rutas de la siguiente manera.
+
+### ⚙️ Sección A: Ejecución Técnica del Sistema
+
+#### 1. Infraestructura Activa en Docker (Base de Datos)
+Muestra los contenedores de PostgreSQL inicializados y corriendo correctamente en segundo plano.
+![Contenedores de Docker](docs/R_EJECUCION_DOCKER.png)
+
+#### 2. Servidor Spring Boot en Ejecución (Tomcat Puerto 8080)
+Evidencia del Back-End compilando con éxito y conectándose a la base de datos contenerizada.
+![Arranque del Back-End](docs/R_ARRANQUE_SPRING.png)
+
+#### 3. Suite de Pruebas Unitarias Aprobada (JUnit & Mockito)
+Captura del comando `mvn test` arrojando un resultado exitoso (`BUILD SUCCESS`) con cero fallos en memoria RAM.
+![Resultado de Pruebas Unitarias](docs/R_PRUEBAS_SUCCESS.png)
+
+---
+
+### 💻 Sección B: Interfaces de Usuario e Integración (UI/UX)
+
+#### 4. Formulario de Registro (Rol Practicante)
+Vista completa de la interfaz del aspirante con las validaciones de campos obligatorios activas.
+![Formulario de Practicantes](docs/R_VISTA_FORMULARIO.png)
+
+#### 5. Confirmación de Postulación en Tiempo Real (Evidencia Correo SMTP)
+Captura de pantalla de la bandeja de entrada real de Gmail mostrando la notificación automatizada despachada por el servidor.
+![Correo Electrónico Recibido](docs/R_EVIDENCIA_CORREO.png)
+
+#### 6. Portal de Selección e Inserción de Datos (Rol Analista)
+Demostración de la tabla dinámica con el buscador unificado por texto y el sistema de ordenamiento por cabeceras interactivo.
+![Panel de Control de Analistas](docs/R_DASHBOARD_ANALISTA.png)
 
 
 
